@@ -45,4 +45,11 @@
     <string name="load_news_button_label">load_news_button_label</string>
     <string name="news">News</string>
     <string name="article_image">News Image</string>
+    <string name="category_business">business</string>
+    <string name="category_entertainment">entertainment</string>
+    <string name="category_general">general</string>
+    <string name="category_health">health</string>
+    <string name="clear_button_description">clear button</string>
+    <string name="hint_text">Search</string>
+    <string name="no_results_found">No Results Found</string>
 </resources>

@@ -25,37 +25,77 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:padding="16dp"
                 app:layout_constraintTop_toTopOf="parent">
-
-                <EditText
-                    android:id="@+id/search_box"
+                <View
                     android:layout_width="0dp"
-                    android:layout_height="50dp"
-                    android:layout_weight="1"
-                    android:hint="Search" />
-
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
                 <Button
                     android:id="@+id/filter_button"
+                    app:layout_constraintBottom_toBottomOf="@id/search_layout"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginRight="5dp"
                     android:text="Filters" />
+
+                <Button
+                    android:id="@+id/search_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="5dp"
+                    android:text="Search" />
+
+
 
             </LinearLayout>
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/newsRecyclerView"
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/text_box_layout"
+                android:hint="@string/hint_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:clipToPadding="false"
-                android:paddingTop="8dp"
-                android:paddingBottom="8dp"
                 app:layout_constraintTop_toBottomOf="@id/search_layout"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                tools:listitem="@layout/item_news" />
+                app:endIconMode="clear_text">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/search_box"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    tools:layout_editor_absoluteX="5dp"
+                    tools:layout_editor_absoluteY="53dp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                app:layout_constraintTop_toBottomOf="@id/text_box_layout"
+                android:layout_height="match_parent">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/newsRecyclerView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:clipToPadding="false"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                    tools:listitem="@layout/item_news" />
+
+                <TextView
+                    android:id="@+id/noResultsTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/no_results_found"
+                    android:visibility="gone"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
