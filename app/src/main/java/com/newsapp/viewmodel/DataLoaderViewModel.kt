@@ -15,9 +15,9 @@ class DataLoaderViewModel : ViewModel() {
     val newsLiveData: LiveData<NewsResponse> = _newsLiveData
     private val networkService by lazy { NetworkService() }
 
-    fun loadNewsList() {
+    fun loadNewsList(query: String = "", category: String = "") {
         viewModelScope.launch(Dispatchers.IO) {
-            _newsLiveData.postValue(networkService.loadNewsList())
+            _newsLiveData.postValue(networkService.loadNewsList(query = query, category = category))
         }
     }
 
