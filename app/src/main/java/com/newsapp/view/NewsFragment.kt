@@ -1,13 +1,10 @@
 package com.newsapp.view
 
 import android.content.Context
-import android.graphics.drawable.Drawable
+import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import android.os.Build
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
 import android.util.Log
 import android.view.*
 import android.widget.PopupMenu
@@ -15,14 +12,13 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.gson.Gson
 import com.newsapp.R
-import com.newsapp.databinding.FragmentNewsBinding
-import com.newsapp.viewmodel.DataLoaderViewModel
 import com.newsapp.adapter.NewsAdapter
+import com.newsapp.databinding.FragmentNewsBinding
 import com.newsapp.entity.ArticleResponse
-import java.io.IOException
-import java.net.InetSocketAddress
-import java.net.Socket
+import com.newsapp.viewmodel.DataLoaderViewModel
+
 
 class NewsFragment : Fragment() {
 
@@ -45,6 +41,10 @@ class NewsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
+        binding.swipeRefreshLayout.setOnRefreshListener {
+            viewModel.loadNewsList(query = query, category = category)
+            binding.swipeRefreshLayout.isRefreshing = false
+        }
         binding.searchButton.setOnClickListener {
             query = binding.searchBox.text.toString()
             try {
@@ -94,9 +94,32 @@ class NewsFragment : Fragment() {
 
         viewModel.newsLiveData.observe(viewLifecycleOwner) { newsResponse ->
             articles = newsResponse.articles
-            binding.newsRecyclerView.adapter = articles?.let { NewsAdapter(it) }
+
+            val adapter = articles?.let { NewsAdapter(it) }
+            adapter?.setOnItemClickListener(object : NewsAdapter.OnItemClickListener {
+                override fun onItemClick(article: ArticleResponse) {
+                    val intent = Intent(requireContext(), NewsDetailActivity::class.java)
+                    val articleJson = Gson().toJson(article)
+                    intent.putExtra("article", articleJson)
+                    startActivity(intent)
+                }
+            })
+
+            binding.newsRecyclerView.adapter = adapter
             binding.noResultsTextView.visibility = if (articles?.isEmpty() == true) View.VISIBLE else View.GONE
         }
+
+        val adapter = NewsAdapter(articles ?: listOf())
+        adapter.setOnItemClickListener(object : NewsAdapter.OnItemClickListener {
+            override fun onItemClick(article: ArticleResponse) {
+                val intent = Intent(requireContext(), NewsDetailActivity::class.java)
+                val articleJson = Gson().toJson(article)
+                intent.putExtra("article", articleJson)
+                startActivity(intent)
+            }
+        })
+        binding.newsRecyclerView.adapter = adapter
+
         try {
             viewModel.loadNewsList()
         } catch (e: Exception) {
@@ -124,18 +147,20 @@ class NewsFragment : Fragment() {
     fun isOnline(context: Context): Boolean {
         val connectivityManager =
             context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val capabilities =
-            connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
-        if (capabilities != null) {
-            if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
-                Log.i("Internet", "NetworkCapabilities.TRANSPORT_CELLULAR")
-                return true
-            } else if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
-                Log.i("Internet", "NetworkCapabilities.TRANSPORT_WIFI")
-                return true
-            } else if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
-                Log.i("Internet", "NetworkCapabilities.TRANSPORT_ETHERNET")
-                return true
+        if (connectivityManager != null) {
+            val capabilities =
+                connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+            if (capabilities != null) {
+                if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                    Log.i("Internet", "NetworkCapabilities.TRANSPORT_CELLULAR")
+                    return true
+                } else if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                    Log.i("Internet", "NetworkCapabilities.TRANSPORT_WIFI")
+                    return true
+                } else if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
+                    Log.i("Internet", "NetworkCapabilities.TRANSPORT_ETHERNET")
+                    return true
+                }
             }
         }
         return false

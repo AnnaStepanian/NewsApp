@@ -24,7 +24,6 @@
                 android:id="@+id/image_view"
                 android:layout_width="91dp"
                 android:layout_height="100dp"
-                android:scaleType="centerCrop"
                 android:layout_weight="1"
                 android:contentDescription="@string/article_image" />
 
