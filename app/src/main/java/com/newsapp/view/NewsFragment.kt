@@ -7,6 +7,7 @@ import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.util.Log
 import android.view.*
+import android.view.inputmethod.InputMethodManager
 import android.widget.PopupMenu
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -24,9 +25,9 @@ class NewsFragment : Fragment() {
 
     private lateinit var binding: FragmentNewsBinding
     private val viewModel: DataLoaderViewModel by viewModels()
-    var query: String = ""
-    var category: String = ""
-    var articles: List<ArticleResponse>? = null
+    private var query: String = ""
+    private var category: String = "general"
+    private var articles: List<ArticleResponse>? = null
     private var selectedCategoryId = R.id.category_general
 
     override fun onCreateView(
@@ -41,14 +42,24 @@ class NewsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
+        binding.textBoxLayout.setEndIconOnClickListener {
+            query = ""
+            viewModel.loadNewsList(binding.swipeRefreshLayout, query = query, category = category)
+            binding.textBoxLayout.editText?.apply {
+                text?.clear()
+                clearFocus()
+                // Hide the keyboard
+                val imm = context?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                imm.hideSoftInputFromWindow(windowToken, 0)
+            }
+        }
         binding.swipeRefreshLayout.setOnRefreshListener {
-            viewModel.loadNewsList(query = query, category = category)
-            binding.swipeRefreshLayout.isRefreshing = false
+            viewModel.loadNewsList(binding.swipeRefreshLayout, query = query, category = category)
         }
         binding.searchButton.setOnClickListener {
             query = binding.searchBox.text.toString()
             try {
-                viewModel.loadNewsList(query = query, category = category)
+                viewModel.loadNewsList(binding.swipeRefreshLayout, query = query, category = category)
             } catch (e: Exception) {
                 articles = articles?.let { it1 -> filterArticles(it1, query) }
                 if (articles?.isEmpty() == true) {
@@ -84,7 +95,7 @@ class NewsFragment : Fragment() {
                 menuItem.isChecked = true
 
                 // Apply the filter and dismiss the pop-up menu
-                viewModel.loadNewsList(query=this.query, category=category)
+                viewModel.loadNewsList(binding.swipeRefreshLayout, query=this.query, category=category)
                 true
             }
 
@@ -92,36 +103,30 @@ class NewsFragment : Fragment() {
             popupMenu.show()
         }
 
-        viewModel.newsLiveData.observe(viewLifecycleOwner) { newsResponse ->
-            articles = newsResponse.articles
-
-            val adapter = articles?.let { NewsAdapter(it) }
-            adapter?.setOnItemClickListener(object : NewsAdapter.OnItemClickListener {
-                override fun onItemClick(article: ArticleResponse) {
-                    val intent = Intent(requireContext(), NewsDetailActivity::class.java)
-                    val articleJson = Gson().toJson(article)
-                    intent.putExtra("article", articleJson)
-                    startActivity(intent)
-                }
-            })
-
-            binding.newsRecyclerView.adapter = adapter
-            binding.noResultsTextView.visibility = if (articles?.isEmpty() == true) View.VISIBLE else View.GONE
-        }
-
-        val adapter = NewsAdapter(articles ?: listOf())
-        adapter.setOnItemClickListener(object : NewsAdapter.OnItemClickListener {
+        val listener = object : NewsAdapter.OnItemClickListener {
             override fun onItemClick(article: ArticleResponse) {
                 val intent = Intent(requireContext(), NewsDetailActivity::class.java)
                 val articleJson = Gson().toJson(article)
                 intent.putExtra("article", articleJson)
                 startActivity(intent)
             }
-        })
+        }
+        viewModel.newsLiveData.observe(viewLifecycleOwner) { newsResponse ->
+            articles = newsResponse?.articles
+
+            val adapter = articles?.let { NewsAdapter(it) }
+            adapter?.setOnItemClickListener(listener)
+
+            binding.newsRecyclerView.adapter = adapter
+            binding.noResultsTextView.visibility = if (articles?.isEmpty() == true) View.VISIBLE else View.GONE
+        }
+
+        val adapter = NewsAdapter(articles ?: listOf())
+        adapter.setOnItemClickListener(listener)
         binding.newsRecyclerView.adapter = adapter
 
         try {
-            viewModel.loadNewsList()
+            viewModel.loadNewsList(binding.swipeRefreshLayout)
         } catch (e: Exception) {
             binding.noResultsTextView.visibility = View.VISIBLE
         }
@@ -138,7 +143,7 @@ class NewsFragment : Fragment() {
         )
     }
 
-    fun filterArticles(articles: List<ArticleResponse>, query: String): List<ArticleResponse> {
+    private fun filterArticles(articles: List<ArticleResponse>, query: String): List<ArticleResponse> {
         return articles.filter { article ->
             article.title?.contains(query, ignoreCase = true) == true || article.description?.contains(query, ignoreCase = true) == true
         }
