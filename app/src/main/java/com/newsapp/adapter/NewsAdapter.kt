@@ -37,7 +37,6 @@ class NewsAdapter(private val articles: List<ArticleResponse>) : RecyclerView.Ad
                 .into(binding.imageView)
             binding.executePendingBindings()
             itemView.setOnClickListener {
-                println("fucked" +  onItemClickListener + article.title)
                 onItemClickListener?.onItemClick(article)
             }
         }
@@ -51,6 +50,5 @@ class NewsAdapter(private val articles: List<ArticleResponse>) : RecyclerView.Ad
 
     fun setOnItemClickListener(listener: OnItemClickListener?) {
         onItemClickListener = listener
-        println("yessss" + onItemClickListener)
     }
 }

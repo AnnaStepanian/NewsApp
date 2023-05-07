@@ -52,4 +52,10 @@
     <string name="clear_button_description">clear button</string>
     <string name="hint_text">Search</string>
     <string name="no_results_found">No Results Found</string>
+    <string name="filters">Filters</string>
+    <string name="search">Search</string>
+    <string name="source">Source</string>
+    <string name="author">Author</string>
+    <string name="title">title</string>
+    <string name="description">description</string>
 </resources>
